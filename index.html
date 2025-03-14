@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  </head>
+
+  <body>
+    <script>
+      const socket = io('http://localhost:3001');
+      socket.on('connection', () => {
+        // console.log('Connected to server');
+      });
+
+      socket.on('server', (msg) => {
+        console.log(msg);
+        socket.emit('client', msg);
+      });
+
+      // socket.on('server', (data) => {
+      //   console.log(data);
+      // });
+
+      // socket.emit('client', 'Hello from client');
+    </script>
+  </body>
+</html>
