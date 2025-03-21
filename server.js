@@ -1,42 +1,58 @@
-import express from 'express';
-import { createServer } from 'node:http';
-import { Server } from 'socket.io';
-import cors from 'cors';
+import express from "express";
+import { createServer } from "node:http";
+import { Server } from "socket.io";
+import cors from "cors";
 
 const app = express();
 const server = createServer(app);
+// app.use(cors);
 
-app.use(cors);
+let featureFlags = {
+  showInput: false,
+  darkTheme: false,
+};
 
 const io = new Server(server, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST'],
+    origin: "*",
+    methods: ["GET", "POST"],
   },
 });
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
+app.get("/", (req, res) => {
+  res.send("Hello World!");
 });
 
-io.on('connection', (socket) => {
-  // console.log('A user connected', socket.id);
+app.use(express.json());
 
-  // socket.on('disconnect', () => {
-  //   console.log('A user disconnected', socket.id);
-  // });
+app.post("/toggle-feature", (req, res) => {
+  console.log(req.body);
+  const { feature, value } = req.body;
 
-  socket.emit('server', 'Hello World from SERVER');
+  if (feature in featureFlags) {
+    featureFlags[feature] = value;
+    io.emit("feature_flags", featureFlags);
+    return res.json({ success: true, featureFlags });
+  }
 
-  socket.on('client', (msg) => {
-    console.log(msg);
+  return res.status(400).json({ error: "Feature inválida" });
+});
+
+app.use(express.json());
+
+io.on("connection", (socket) => {
+  // console.log("A user connected", socket.id);
+
+  socket.on("chat", (msg) => {
+    console.log("message: ", msg);
+    io.emit("chat", msg);
   });
-  // socket.on('client', (msg) => {
-  //   console.log('Log do server => ', msg);
-  //   io.emit('server', 'Enviado do server após receber a msg');
+
+  socket.emit("feature_flags", featureFlags);
+
+  // socket.on("disconnect", () => {
+  //   console.log("A user disconnected", socket.id);
   // });
 });
 
-// io.emit('server', 'Hello from server');
-
-server.listen(3001, () => console.log('Server is running on port 3001'));
+server.listen(3001, () => console.log("Server is running on port 3001"));

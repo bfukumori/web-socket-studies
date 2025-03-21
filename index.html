@@ -8,22 +8,54 @@
   </head>
 
   <body>
+    <form id="form">
+      <input type="text" id="input" />
+    </form>
+
+    <div>
+      <h1>WebSocket Feature Flags</h1>
+      <p id="status-nova-interface">Nova Interface: Desativada</p>
+      <p id="status-modo-escuro">Modo Escuro: Desativado</p>
+    </div>
+    <ul id="messages"></ul>
     <script>
-      const socket = io('http://localhost:3001');
-      socket.on('connection', () => {
-        // console.log('Connected to server');
+      const socket = io("http://localhost:3001");
+      socket.on("connection", () => {
+        console.log("Connected to server");
       });
 
-      socket.on('server', (msg) => {
-        console.log(msg);
-        socket.emit('client', msg);
+      socket.on("feature_flags", (flags) => {
+        console.log(flags);
+        document.getElementById(
+          "status-nova-interface"
+        ).textContent = `Mostrar Input: ${
+          flags.showInput ? "Ativada" : "Desativada"
+        }`;
+        document.getElementById(
+          "status-modo-escuro"
+        ).textContent = `Modo Escuro: ${
+          flags.darkTheme ? "Ativado" : "Desativado"
+        }`;
       });
 
-      // socket.on('server', (data) => {
-      //   console.log(data);
-      // });
+      const form = document.getElementById("form");
+      const input = document.getElementById("input");
+      const messages = document.getElementById("messages");
 
-      // socket.emit('client', 'Hello from client');
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (input.value) {
+          socket.emit("chat", `${socket.id}: ${input.value}`);
+          input.value = "";
+        }
+      });
+
+      socket.on("chat", (msg) => {
+        const item = document.createElement("li");
+        item.textContent = msg;
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+      });
     </script>
   </body>
 </html>
